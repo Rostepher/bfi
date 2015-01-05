@@ -1,0 +1,5 @@
+[package]
+
+name = "brainfuck"
+version = "0.0.1"
+authors = ["Rostepher <rostepher.dev@gmail.com>"]
