@@ -5,10 +5,12 @@
 use std::io::File;
 
 use byte_stream::ByteStream;
+use lexer::tokenize;
 use mem::Mem;
-use parser::*;
+use parser::{Ast, Dir, Op, parse};
 
 mod byte_stream;
+mod lexer;
 mod mem;
 mod parser;
 
@@ -30,37 +32,20 @@ fn write_char(c: char) {
 
 /// Eval function of interpreter.
 fn eval(mem: &mut Mem, ast: &Ast) {
-    let mut i = 0u;
-    while i < ast.len() {
-        //println!("{} : {}", mem, ast[i]);
+    for mut i in range(0, ast.len()) {
         match ast[i] {
-            LShift => mem.left_shift(),
-            RShift => mem.right_shift(),
-            Inc    => mem.increment(),
-            Dec    => mem.decrement(),
-            Write  => write_char(mem.get() as char),
-            Read   => mem.set(read_char() as u8),
-
-            // jump back to the command after the matching '[' if the value
-            // in mem is not 0, otherwise continue to the next command.
-            JmpB => {
-                if mem.get() != 0 {
-                    i = 0;
-                    continue;
+            Op::Move(Dir::Left, steps)  => mem.move_left(steps),
+            Op::Move(Dir::Right, steps) => mem.move_right(steps),
+            Op::Incr(value)             => mem.increment(value),
+            Op::Decr(value)             => mem.decrement(value),
+            Op::Read                    => mem.set(read_char() as u8),
+            Op::Write                   => write_char(mem.get() as char),
+            Op::Loop(box ref loop_ast) => {
+                while mem.get() != 0 {
+                    eval(mem, loop_ast)
                 }
-                break;
-            },
-
-            // jump forward to the command after the matching ']' if the value
-            // in mem is 0, otherwise continue to the next command.
-            JmpF(ref loop_ast) => {
-                if mem.get() == 0 {
-                    continue;
-                }
-                eval(mem, loop_ast)
             },
         }
-        i += 1;
     }
 }
 
@@ -83,7 +68,8 @@ fn main() {
         Ok(mut file) => {
             let mut mem = Mem::new();
             let mut byte_stream = ByteStream::new(&mut file);
-            let ast = parse(&mut byte_stream);
+            let mut token_stream = tokenize(&mut byte_stream);
+            let ast = parse(&mut token_stream);
             eval(&mut mem, &ast);
         },
         Err(e) => panic!("{}", e),

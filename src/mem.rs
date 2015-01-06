@@ -1,4 +1,4 @@
-const MEM_SIZE: uint = 16;
+const MEM_SIZE: uint = 4_096;
 
 #[derive(Show)]
 pub struct Mem {
@@ -6,6 +6,7 @@ pub struct Mem {
     pos: uint           // position in address space
 }
 
+// TODO: add safety checks for moving pos and changing cells
 impl Mem {
     /// Create a new `Mem` stuct.
     #[inline]
@@ -30,25 +31,25 @@ impl Mem {
 
     /// Shift the current position to the left.
     #[inline]
-    pub fn left_shift(&mut self) {
-        self.pos -= 1;
+    pub fn move_left(&mut self, steps: uint) {
+        self.pos -= steps;
     }
 
     /// Shift the current position to the right.
     #[inline]
-    pub fn right_shift(&mut self) {
-        self.pos += 1;
+    pub fn move_right(&mut self, steps: uint) {
+        self.pos += steps;
     }
 
     /// Decrement the value at the current position.
     #[inline]
-    pub fn decrement(&mut self) {
-        self.cells[self.pos] -= 1;
+    pub fn decrement(&mut self, value: u8) {
+        self.cells[self.pos] -= value;
     }
 
     /// Increment the value at the current position.
     #[inline]
-    pub fn increment(&mut self) {
-        self.cells[self.pos] += 1;
+    pub fn increment(&mut self, value: u8) {
+        self.cells[self.pos] += value;
     }
 }
