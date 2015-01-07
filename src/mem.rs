@@ -3,53 +3,52 @@ const MEM_SIZE: uint = 4_096;
 #[derive(Show)]
 pub struct Mem {
     cells: Box<[u8]>,   // address space
-    pos: uint           // position in address space
+    ptr: uint           // pointer in address space
 }
 
-// TODO: add safety checks for moving pos and changing cells
 impl Mem {
     /// Create a new `Mem` stuct.
     #[inline]
     pub fn new() -> Mem {
         Mem {
             cells: box [0u8; MEM_SIZE],
-            pos: 0u
+            ptr: 0u
         }
     }
 
-    /// Return the value of cell at the current position.
+    /// Return the value of cell at the current pointer.
     #[inline]
     pub fn get(&self) -> u8 {
-        self.cells[self.pos]
+        self.cells[self.ptr]
     }
 
-    /// Set the value at the current position.
+    /// Set the value at the current pointer.
     #[inline]
     pub fn set(&mut self, value: u8) {
-        self.cells[self.pos] = value;
+        self.cells[self.ptr] = value;
     }
 
-    /// Shift the current position to the left.
+    /// Shift the current pointer to the left.
     #[inline]
     pub fn move_left(&mut self, steps: uint) {
-        self.pos -= steps;
+        self.ptr -= steps;
     }
 
-    /// Shift the current position to the right.
+    /// Shift the current pointer to the right.
     #[inline]
     pub fn move_right(&mut self, steps: uint) {
-        self.pos += steps;
+        self.ptr += steps;
     }
 
-    /// Decrement the value at the current position.
+    /// Decrement the value at the current pointer.
     #[inline]
     pub fn decrement(&mut self, value: u8) {
-        self.cells[self.pos] -= value;
+        self.cells[self.ptr] -= value;
     }
 
-    /// Increment the value at the current position.
+    /// Increment the value at the current pointer.
     #[inline]
     pub fn increment(&mut self, value: u8) {
-        self.cells[self.pos] += value;
+        self.cells[self.ptr] += value;
     }
 }

@@ -48,11 +48,20 @@ impl TokenStream {
         self.consume_token();
         token
     }
+
+    /// Return the previous token.
+    pub fn prev_token(&self) -> Option<Token> {
+        if self.cursor == 0 {
+            None
+        } else {
+            Some(self.tokens[self.cursor - 1])
+        }
+    }
 }
 
 /// Tokenizes a `ByteStream` and returns a `TokenStream`.
 pub fn tokenize<R: Reader>(byte_stream: &mut ByteStream<R>) -> TokenStream {
-    let mut tokens = box Vec::new();
+    let mut tokens = Vec::new();
     loop {
         match byte_stream.next_byte() {
             Some(byte) => match byte as char {
@@ -70,5 +79,5 @@ pub fn tokenize<R: Reader>(byte_stream: &mut ByteStream<R>) -> TokenStream {
         };
 
     }
-    TokenStream::new(tokens)
+    TokenStream::new(box tokens)
 }

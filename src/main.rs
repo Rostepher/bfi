@@ -7,7 +7,7 @@ use std::io::File;
 use byte_stream::ByteStream;
 use lexer::tokenize;
 use mem::Mem;
-use parser::{Ast, Dir, Op, parse};
+use parser::{Ast, Op, parse};
 
 mod byte_stream;
 mod lexer;
@@ -34,12 +34,12 @@ fn write_char(c: char) {
 fn eval(mem: &mut Mem, ast: &Ast) {
     for mut i in range(0, ast.len()) {
         match ast[i] {
-            Op::Move(Dir::Left, steps)  => mem.move_left(steps),
-            Op::Move(Dir::Right, steps) => mem.move_right(steps),
-            Op::Incr(value)             => mem.increment(value),
-            Op::Decr(value)             => mem.decrement(value),
-            Op::Read                    => mem.set(read_char() as u8),
-            Op::Write                   => write_char(mem.get() as char),
+            Op::Left(steps)  => mem.move_left(steps),
+            Op::Right(steps) => mem.move_right(steps),
+            Op::Incr(value)  => mem.increment(value),
+            Op::Decr(value)  => mem.decrement(value),
+            Op::Read         => mem.set(read_char() as u8),
+            Op::Write        => write_char(mem.get() as char),
             Op::Loop(box ref loop_ast) => {
                 while mem.get() != 0 {
                     eval(mem, loop_ast)
