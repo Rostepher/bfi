@@ -1,4 +1,5 @@
-const MEM_SIZE: uint = 4_096;
+// size of allocated memory in bytes
+const MEM_SIZE: uint = 65_536; // 64kB!
 
 #[derive(Show)]
 pub struct Mem {

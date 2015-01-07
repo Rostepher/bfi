@@ -184,8 +184,6 @@ pub fn parse(token_stream: &mut TokenStream) -> Ast {
         }
     }
 
-    println!("{}", ast);
-
     // return optimized ast
     ast
 }
