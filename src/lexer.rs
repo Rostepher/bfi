@@ -4,8 +4,8 @@ use byte_stream::ByteStream;
 pub enum Token {
     Left,   // '<'
     Right,  // '>'
-    Incr,   // '+'
-    Decr,   // '-'
+    Add,    // '+'
+    Sub,    // '-'
     Read,   // ','
     Write,  // '.'
     Open,   // '['
@@ -14,7 +14,7 @@ pub enum Token {
 
 pub struct TokenStream {
     tokens: Box<Vec<Token>>,
-    cursor: uint
+    cursor: usize
 }
 
 impl TokenStream {
@@ -22,7 +22,7 @@ impl TokenStream {
     pub fn new(tokens: Box<Vec<Token>>) -> TokenStream {
         TokenStream {
             tokens: tokens,
-            cursor: 0u
+            cursor: 0
         }
     }
 
@@ -67,8 +67,8 @@ pub fn tokenize<R: Reader>(byte_stream: &mut ByteStream<R>) -> TokenStream {
             Some(byte) => match byte as char {
                 '<' => tokens.push(Token::Left),
                 '>' => tokens.push(Token::Right),
-                '+' => tokens.push(Token::Incr),
-                '-' => tokens.push(Token::Decr),
+                '+' => tokens.push(Token::Add),
+                '-' => tokens.push(Token::Sub),
                 ',' => tokens.push(Token::Read),
                 '.' => tokens.push(Token::Write),
                 '[' => tokens.push(Token::Open),

@@ -1,53 +1,25 @@
 // Brainfuck interpreter written in Rust.
 
-#![feature(globs)]
+#![feature(box_syntax)]
 
+use std::default::Default;
 use std::io::File;
 
 use byte_stream::ByteStream;
+use eval::eval;
 use lexer::tokenize;
 use mem::Mem;
-use parser::{Ast, Op, parse};
+use optimizer::{OptConfig, optimize};
+use parser::parse;
+use syntax::{Ast, Ir};
 
 mod byte_stream;
+mod eval;
 mod lexer;
 mod mem;
+mod optimizer;
 mod parser;
-
-/// Reads a `char` from `stdin`.
-fn read_char() -> char {
-    match std::io::stdin().read_char() {
-        Ok(c)  => c,
-        Err(e) => panic!("{}", e),
-    }
-}
-
-/// Writes a `char` to `stdout`.
-fn write_char(c: char) {
-    match std::io::stdout().write_char(c) {
-        Ok(_)  => {},
-        Err(e) => panic!("{}", e),
-    }
-}
-
-/// Eval function of interpreter.
-fn eval(mem: &mut Mem, ast: &Ast) {
-    for mut i in range(0, ast.len()) {
-        match ast[i] {
-            Op::Left(steps)  => mem.move_left(steps),
-            Op::Right(steps) => mem.move_right(steps),
-            Op::Incr(value)  => mem.increment(value),
-            Op::Decr(value)  => mem.decrement(value),
-            Op::Read         => mem.set(read_char() as u8),
-            Op::Write        => write_char(mem.get() as char),
-            Op::Loop(box ref loop_ast) => {
-                while mem.get() != 0 {
-                    eval(mem, loop_ast)
-                }
-            },
-        }
-    }
-}
+mod syntax;
 
 /// Main function.
 fn main() {
@@ -69,7 +41,9 @@ fn main() {
             let mut mem = Mem::new();
             let mut byte_stream = ByteStream::new(&mut file);
             let mut token_stream = tokenize(&mut byte_stream);
-            let ast = parse(&mut token_stream);
+            let mut ast = parse(&mut token_stream);
+            let opt_config = Default::default();
+            optimize(&opt_config, &mut ast);
             eval(&mut mem, &ast);
         },
         Err(e) => panic!("{}", e),
