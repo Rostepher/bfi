@@ -1,5 +1,5 @@
 /// Intermediate Representation of Brainfuck operations.
-#[derive(Clone, Copy, Eq, PartialEq, Show, String)]
+#[derive(Clone, Copy, Eq, PartialEq, Show)]
 pub enum Ir {
     Add(u8),            // add value to the current cell
     Sub(u8),            // subtract value from the current cell

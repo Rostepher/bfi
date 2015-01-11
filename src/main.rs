@@ -9,7 +9,6 @@ use byte_stream::ByteStream;
 use eval::eval;
 use optimizer::optimize;
 use parser::parse;
-use syntax::{Ast, Ir};
 
 mod byte_stream;
 mod eval;
