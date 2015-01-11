@@ -1,5 +1,5 @@
 /// Intermediate Representation of Brainfuck operations.
-#[derive(Clone, Eq, PartialEq, Show)]
+#[derive(Clone, Copy, Eq, PartialEq, Show, String)]
 pub enum Ir {
     Add(u8),            // add value to the current cell
     Sub(u8),            // subtract value from the current cell
@@ -7,7 +7,8 @@ pub enum Ir {
     MoveRight(usize),   // move the pointer right by steps
     Read,               // read byte from user
     Write,              // write byte as char to stdout
-    Loop(Box<Ast>),     // loop while current cell is 0
+    Open,               // opens a loop
+    Close,              // closes a loop
 
     // optimizations
     Clear,              // clear the current cell

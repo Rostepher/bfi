@@ -1,7 +1,6 @@
 // size of allocated memory in bytes
 const MEM_SIZE: usize = 65_536; // 64kB!
 
-#[derive(Show)]
 pub struct Mem {
     cells: Box<[u8]>,   // address space
     ptr: usize           // pointer in address space
