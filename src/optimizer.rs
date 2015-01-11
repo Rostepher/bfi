@@ -1,3 +1,8 @@
+///! The optimizer module is inspired by the article (brainfuck optimization
+///! strategies)[http://calmerthanyouare.org/2015/01/07/optimizing-brainfuck.html]
+///! written by Mats Linander. It implements many of the optimization
+///! strategies discussed in the article.
+
 use std::default::Default;
 
 use syntax::{Ast, Ir};
@@ -39,8 +44,6 @@ impl Default for OptConfig {
 /// Removes comment loop(s), which exist at the very beginning of the `Ast` and
 /// would never execute as the current cell would be 0.
 fn comment_loop_opt(ast: &Ast) -> Ast {
-    println!("comment_loop_opt() called!");
-
     // optimized abstract syntax tree
     let mut opt_ast = ast.clone();
 
@@ -73,8 +76,6 @@ fn comment_loop_opt(ast: &Ast) -> Ast {
 /// comment loops and loops that start immediately after another loop closed,
 /// which could never execute as, the current cell would be 0.
 fn unused_loop_opt(ast: &Ast) -> Ast {
-    println!("unused_loop_opt() called!");
-
     if ast.len() > 1 {
         // optimized abstract syntax tree
         let mut opt_ast = Vec::new();
@@ -125,8 +126,6 @@ fn unused_loop_opt(ast: &Ast) -> Ast {
 /// MoveRight(3), Add(3), Sub(3), MoveLeft(3)
 /// ```
 fn contract_opt(ast: &Ast) -> Ast {
-    println!("contract_opt() called!");
-
     if ast.len() > 1 {
         // optimized abstract syntax tree
         let mut opt_ast = Vec::new();
@@ -221,8 +220,6 @@ fn contract_opt(ast: &Ast) -> Ast {
 /// Clear(0)
 /// ```
 fn clear_loop_opt(ast: &Ast) -> Ast {
-    println!("clear_loop_opt() called!");
-
     if ast.len() > 2 {
         // optimized abstract syntax tree
         let mut opt_ast = Vec::new();
@@ -264,8 +261,6 @@ fn clear_loop_opt(ast: &Ast) -> Ast {
 /// ScanLeft
 /// ```
 fn scan_loop_opt(ast: &Ast) -> Ast {
-    println!("scan_loop_opt() called!");
-
     if ast.len() > 2 {
         // optimized abstract syntax tree
         let mut opt_ast = Vec::new();
@@ -324,11 +319,11 @@ fn scan_loop_opt(ast: &Ast) -> Ast {
 /// ```
 fn mul_copy_loop_opt(ast: &Ast) -> Ast {
     // TODO
-    println!("mul_copy_loop_opt() called!");
     ast.clone()
 }
 
-/// Optimizes an `Ast`.
+/// Optimizes an `Ast` using the `OptConfig` to customize which optimizations
+/// to execute.
 pub fn optimize(opt_config: &OptConfig, ast: &Ast) -> Ast {
     let mut opt_ast = ast.clone();
 
@@ -343,11 +338,11 @@ pub fn optimize(opt_config: &OptConfig, ast: &Ast) -> Ast {
     if opt_config.clear_loop_opt {
         opt_ast = clear_loop_opt(&opt_ast);
     }
-    if opt_config.mul_copy_loop_opt {
-        opt_ast = mul_copy_loop_opt(&opt_ast);
-    }
     if opt_config.scan_loop_opt {
         opt_ast = scan_loop_opt(&opt_ast);
+    }
+    if opt_config.mul_copy_loop_opt {
+        opt_ast = mul_copy_loop_opt(&opt_ast);
     }
 
     opt_ast

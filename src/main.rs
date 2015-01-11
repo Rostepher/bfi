@@ -24,7 +24,6 @@ fn interpret(file_name: &str) {
             let mut byte_stream = ByteStream::new(&mut file);
             let opt_config = Default::default();
             let ast = optimize(&opt_config, &parse(&mut byte_stream));
-            println!("{:?}", ast);
             eval(&ast);
         },
         Err(e) => panic!("{}", e),
