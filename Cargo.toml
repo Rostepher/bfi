@@ -1,5 +1,8 @@
 [package]
-
 name = "brainfuck"
 version = "0.0.1"
 authors = ["Rostepher <rostepher.dev@gmail.com>"]
+
+[dependencies]
+getopts = "0.1.0"
+#rustc-serialize = "0.2"
