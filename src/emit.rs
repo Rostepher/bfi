@@ -77,9 +77,11 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
 
     // standard includes, main function and mem/p declarations
     file.write_str("\
+    #![allow(unstable)]\n\
+    \n\
     /// Reads a `char` from `stdin`.\n\
     fn read_char() -> char {\n\
-        match stdin().read_char() {\n\
+        match std::io::stdin().read_char() {\n\
             Ok(c)  => c,\n\
             Err(e) => panic!(\"{}\", e),\n\
         }\n\
@@ -87,7 +89,7 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
     \n\
     /// Writes a `char` to `stdout`.\n\
     fn write_char(c: char) {\n\
-        match stdout().write_char(c) {\n\
+        match std::io::stdout().write_char(c) {\n\
             Ok(_)  => {},\n\
             Err(e) => panic!(\"{}\", e),\n\
         }\n\
@@ -106,15 +108,15 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
             Ir::Sub(value)          => format!("mem[p] -= {};", value),
             Ir::Shift(Left, steps)  => format!("p -= {};", steps),
             Ir::Shift(Right, steps) => format!("p += {};", steps),
-            Ir::Read                => "mem[p] = read_char();".to_string(),
-            Ir::Write               => "write_char(mem[p]);".to_string(),
-            Ir::Open                => "while (mem[p] != 0) {".to_string(),
+            Ir::Read                => "mem[p] = read_char() as u8;".to_string(),
+            Ir::Write               => "write_char(mem[p] as char);".to_string(),
+            Ir::Open                => "while mem[p] != 0 {".to_string(),
             Ir::Close               => "}".to_string(),
 
             // optimizations
             Ir::Clear               => "mem[p] = 0;".to_string(),
-            Ir::Scan(Left)          => "while (mem[p] != 0) { p -= 1; }".to_string(),
-            Ir::Scan(Right)         => "while (mem[p] != 0) { p += 1; }".to_string(),
+            Ir::Scan(Left)          => "while mem[p] != 0 { p -= 1; }".to_string(),
+            Ir::Scan(Right)         => "while mem[p] != 0 { p += 1; }".to_string(),
             Ir::Copy(Left, steps)   => format!("mem[p - {}] += mem[p];", steps),
             Ir::Copy(Right, steps)  => format!("mem[p + {}] += mem[p];", steps),
             Ir::Mul(Left, steps, factor) => {
