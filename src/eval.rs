@@ -79,6 +79,8 @@ pub fn eval(ast: &Ast) {
             Ir::Copy(Right, steps)        => mem.copy_right(steps),
             Ir::Mul(Left, steps, factor)  => mem.multiply_left(steps, factor),
             Ir::Mul(Right, steps, factor) => mem.multiply_right(steps, factor),
+            Ir::Div(Left, steps, factor)  => mem.divide_left(steps, factor),
+            Ir::Div(Right, steps, factor) => mem.divide_right(steps, factor),
         }
 
         i += 1; // increment the index

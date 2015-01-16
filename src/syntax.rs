@@ -36,6 +36,9 @@ pub enum Ir {
     /// Multiplies the value at the current cell by a specified factor and
     /// then stores the product in the cell left or right by a number of steps.
     Mul(Dir, usize, u8),
+    /// Divided the value at the current cell by a specified factor and
+    /// then stores the product in the cell left or right by a number of steps.
+    Div(Dir, usize, u8),
     /// Scans left or right in memory until the value in the current cell is 0.
     Scan(Dir),
 }

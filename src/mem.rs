@@ -105,4 +105,18 @@ impl Mem {
     pub fn multiply_right(&mut self, steps: usize, factor: u8) {
         self.cells[self.ptr + steps] = self.cells[self.ptr] * factor;
     }
+
+    /// Divided the value of the current cell by a factor and inserts the
+    /// product into the cell left a number of steps.
+    #[inline]
+    pub fn divide_left(&mut self, steps: usize, factor: u8) {
+        self.cells[self.ptr - steps] = self.cells[self.ptr] / factor;
+    }
+
+    /// Divides the value of the current cell by a factor and inserts the
+    /// product into the cell right a number of steps.
+    #[inline]
+    pub fn divide_right(&mut self, steps: usize, factor: u8) {
+        self.cells[self.ptr + steps] = self.cells[self.ptr] / factor;
+    }
 }

@@ -39,10 +39,16 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
             Ir::Copy(Left, steps)  => format!("mem[p - {}] = mem[p];", steps),
             Ir::Copy(Right, steps) => format!("mem[p + {}] = mem[p];", steps),
             Ir::Mul(Left, steps, factor) => {
-                format!("mem[p - {}] = mem[p] * {}", steps, factor)
+                format!("mem[p - {}] = mem[p] * {};", steps, factor)
             },
             Ir::Mul(Right, steps, factor) => {
-                format!("mem[p + {}] = mem[p] * {}", steps, factor)
+                format!("mem[p + {}] = mem[p] * {};", steps, factor)
+            },
+            Ir::Div(Left, steps, factor) => {
+                format!("mem[p - {}] = mem[p] / {};", steps, factor)
+            },
+            Ir::Div(Right, steps, factor) => {
+                format!("mem[p + {}] = mem[p] / {};", steps, factor)
             },
         } + "\n";
 
@@ -51,4 +57,16 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
 
     // close the main function
     file.write_str("}");
+}
+
+/// Emits a file which contains the optmized `Ast`.
+pub fn emit_ir(file_name: &str, ast: &Ast) {
+    let mut file = match File::create(&Path::new(file_name)) {
+        Ok(mut file) => file,
+        Err(e)       => panic!("{}", e),
+    };
+
+    for ir in ast.iter() {
+        file.write_line(format!("{:?}", *ir).as_slice());
+    }
 }

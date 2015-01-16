@@ -4,7 +4,7 @@
 ///! strategies discussed in the article.
 
 use std::collections::HashMap;
-use std::io::stdin;
+use std::num::SignedInt;
 
 use syntax::{Ast, Ir, Right, Left};
 
@@ -253,8 +253,9 @@ fn scan_loop_opt(ast: &Ast) -> Ast {
     }
 }
 
-/// Optimizes 'multiplication loops' and subsequently 'copy loops', which are
-/// a special form of multiplication loops into a set of simplified instructions.
+/// Optimizes 'multiplication loops', 'division loops' and subsequently
+/// 'copy loops', which are a special form of multiplication loops into a set
+/// of simplified instructions.
 ///
 /// # Example
 ///
@@ -279,9 +280,178 @@ fn scan_loop_opt(ast: &Ast) -> Ast {
 /// ```
 /// Copy(1), Copy(2), Clear
 /// ```
-fn mul_copy_loop_opt(ast: &Ast) -> Ast {
-    // TODO
-    ast.clone()
+fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
+    let mut opt_ast = Vec::new();
+
+    // index of the current loop's Ir::Open
+    let mut i = 0;
+
+    'outer: loop {
+        // find the index for the Ir::Open and Ir::Close of the next loop that
+        // does not contain any other loops
+        while i < ast.len() {
+            match ast[i] {
+                Ir::Open => break,
+
+                // push current ir onto the opt_ast then keep looking for an
+                // Ir::Open
+                _ => {
+                    opt_ast.push(ast[i]);
+                    i += 1;
+                },
+            }
+        }
+        // break if the end of the ast has been reached
+        if i >= ast.len() {
+            break;
+        }
+
+        // index of Ir::Close
+        let mut k = i + 1;
+
+        // find the close of the loop
+        while k < ast.len() {
+            match ast[k] {
+                // if another loop is found, push all previous ir onto opt_ast
+                // and then move on
+                Ir::Open  => {
+                    for ir in ast[i..k + 1].iter() {
+                        opt_ast.push(*ir);
+                    }
+                    i = k + 1;
+                    continue 'outer;
+                },
+                Ir::Close => break,  // found the Ir::Close
+                _         => k += 1, // keep searching for the Ir::Close
+            }
+        }
+
+        // break if the end of the ast has been reached
+        if k >= ast.len() {
+            break;
+        }
+
+        for ir in ast[i..k + 1].iter() { print!("{:?}, ", *ir); }
+        println!("");
+
+        // verify that the loop only contains Ir::Add, Ir::Sub, Ir::MoveLeft
+        // or Ir::MoveRight
+        for ir in ast[i + 1..k].iter() {
+            match *ir {
+                // approved ir
+                Ir::Add(_)     |
+                Ir::Sub(_)     |
+                Ir::Move(_, _) => {}, // ignore all correct ir
+
+                // if any other ir appears, push all previous ir onto opt_ast
+                // and then move on
+                _ => {
+                    println!("loop contained {:?}", *ir);
+                    for ir in ast[i..k + 1].iter() {
+                        opt_ast.push(*ir);
+                    }
+                    i = k + 1;
+                    continue 'outer;
+                }
+            }
+        }
+
+        // track the pointer position in the loop and the value of the
+        // affected cells
+        let mut mem: HashMap<isize, i8> = HashMap::new();
+        let mut p = 0is;
+        mem.insert(p, 0i8);
+
+        let mut old_ir = Vec::new();
+
+        for ir in ast[i + 1..k].iter() {
+            old_ir.push(*ir);
+            match *ir {
+                Ir::Add(value) => {
+                    let new_value = match mem.get(&p) {
+                        Some(curr) => *curr + (value as i8),
+                        None       => value as i8,
+                    };
+                    mem.insert(p, new_value);
+                },
+                Ir::Sub(value) => {
+                    let new_value = match mem.get(&p) {
+                        Some(curr) => *curr - (value as i8),
+                        None       => -(value as i8),
+                    };
+                    mem.insert(p, new_value);
+                },
+                Ir::Move(Left, steps)  => p -= steps as isize,
+                Ir::Move(Right, steps) => p += steps as isize,
+                _                      => panic!("error: unexpected {:?}!", *ir),
+            }
+        }
+
+        // if the pointer ends in cell 0 and the loop subtracted exactly 1 from
+        // cell 0, then the loop can be optimized into an Ir::Copy, Ir::Mul or
+        // Ir::Div, otherwise, copy all ir from the loop into opt_ast and
+        // continue looking for an appropriate loop
+        if p != 0 || mem[0] != -1 {
+            for ir in ast[i..k + 1].iter() {
+                opt_ast.push(*ir);
+            }
+            i = k + 1;
+            continue 'outer;
+        }
+
+        // remove cell 0 from mem
+        mem.remove(&(0));
+
+        let mut new_ir = Vec::new();
+
+        // replace the loop with Ir::Copy, Ir::Mul or Ir::Div where appropriate
+        for (steps, factor) in mem.iter() {
+            println!("factor = {}", *factor);
+
+            // cast values safely to u8
+            let usize_steps = SignedInt::abs(*steps) as usize;
+            let u8_factor = SignedInt::abs(*factor) as u8;
+
+            // calculate the direction from ptr to move
+            let dir = if *steps < 0 {
+                Left
+            } else if *steps > 0 {
+                Right
+            } else {
+                continue; // copys neither left or right
+            };
+
+            // if the factor at mem[p] is 1, then it is only copying
+            if *factor == 1 {
+                new_ir.push(Ir::Copy(dir, usize_steps));
+                opt_ast.push(Ir::Copy(dir, usize_steps));
+            } else if *factor > 1 {
+                new_ir.push(Ir::Mul(dir, usize_steps, u8_factor));
+                opt_ast.push(Ir::Mul(dir, usize_steps, u8_factor));
+            } else if *factor < 0 {
+                new_ir.push(Ir::Div(dir, usize_steps, u8_factor));
+                opt_ast.push(Ir::Div(dir, usize_steps, u8_factor));
+            } else {
+                panic!("error: factor of 0 found!");
+            }
+        }
+
+        // insert the clear ir
+        new_ir.push(Ir::Clear);
+        opt_ast.push(Ir::Clear);
+
+        println!("old_ir = {:?}", old_ir);
+        println!("new_ir = {:?}", new_ir);
+        println!("");
+        // println!("ast = {:?}", ast);
+        // println!("opt_ast = {:?}", opt_ast);
+        // println!("");
+
+        // move i to the ir after k
+        i = k + 1;
+    }
+
+    opt_ast
 }
 
 /// Optimization level selected by the user in the command line.
@@ -310,7 +480,7 @@ pub fn optimize(opt_level: OptLevel, ast: &Ast) -> Ast {
     }
 
     if opt_level == OptLevel::Aggressive {
-        opt_ast = mul_copy_loop_opt(&opt_ast);
+        opt_ast = copy_mul_div_loop_opt(&opt_ast);
     }
 
     opt_ast

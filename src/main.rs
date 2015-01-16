@@ -8,7 +8,7 @@ use getopts::*;
 use std::io::File;
 
 use byte_stream::ByteStream;
-use emit::emit_c;
+use emit::{emit_c, emit_ir};
 use eval::eval;
 use optimizer::{optimize, OptLevel};
 use parser::parse;
@@ -117,7 +117,7 @@ fn main() {
         for target in emit_targets.iter() {
             match *target {
                 "c"    => emit_c("emit.c", &ast),
-                "ir"   => println!("emit ir"),
+                "ir"   => emit_ir("emit.ir", &ast),
                 "java" => println!("emit java"),
                 "rust" => println!("emit rust"),
                 _ => panic!("error: unknown emit type!"),
