@@ -394,17 +394,17 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
     let mut start = 0us;
     'outer: loop {
         // next unnested loop
-        let (mut open, mut close) = match next_unnested_loop(ast, start) {
+        let (open, close) = match next_unnested_loop(ast, start) {
             // found an unnested loop
             Some(tuple) => tuple,
 
             // no such loops remain, therefore add all ir left in ast to
-            // opt_ast and return it
+            // opt_ast and break
             None => {
                 for ir in ast[start..].iter() {
                     opt_ast.push(*ir);
                 }
-                return opt_ast;
+                break;
             },
         };
 
@@ -438,15 +438,13 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
         match replace_mul_copy_loop(&loop_ast) {
             // the loop was replacable so append the new ir to opt_ast
             Some(opt_loop_ast) => {
-                opt_ast.push_all(opt_loop_ast.as_slice());
-                println!("loop_ast     = {:?}", loop_ast);
-                println!("opt_loop_ast = {:?}", opt_loop_ast);
+                opt_ast.push_all(&opt_loop_ast[]);
             },
 
             // the loop was not a copy, mul or div loop, therefore push all
             // ir from loop_ast
             None => {
-                opt_ast.push_all(loop_ast.as_slice());
+                opt_ast.push_all(&loop_ast[]);
             },
         }
 

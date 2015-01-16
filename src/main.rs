@@ -1,14 +1,16 @@
 // Brainfuck interpreter written in Rust.
 
 #![feature(box_syntax)]
+#![allow(unstable)] // TODO: remove once std::io/os reform lands
 
 extern crate getopts;
+
 use getopts::*;
 
 use std::io::File;
 
 use byte_stream::ByteStream;
-use emit::{emit_c, emit_ir};
+use emit::{emit_c, emit_ir, emit_rust};
 use eval::eval;
 use optimizer::{optimize, OptLevel};
 use parser::parse;
@@ -26,7 +28,7 @@ static VERSION: &'static str = "0.1.0";
 /// Prints the help message to stdout.
 fn help(program: &str, opts: &[OptGroup]) {
     let brief = format!("Usage: {} [options] FILE", program);
-    println!("{}", usage(brief.as_slice(), opts));
+    println!("{}", usage(&brief[], opts));
 }
 
 /// Prints the version information to stdout.
@@ -37,14 +39,14 @@ fn version(program: &str) {
 /// Main function.
 fn main() {
     let args = std::os::args();
-    let program = args[0].clone();
+    let program = &(args[0])[];
 
     // command line options
     let opts = &[
         optflag("h", "help", "Print this help message"),
         optflag("v", "version", "Output version information and exit"),
         optopt("", "emit", "Comma separated list of types of output for the \
-                           interpreter to emit.", "[ir|c|rust|java]"),
+                           interpreter to emit.", "[c|ir|rust]"),
         optopt("O", "opt-level", "Optimize with possible levels 0-3, default \
                                  2", "LEVEL"),
     ];
@@ -56,13 +58,13 @@ fn main() {
 
     // help
     if matches.opt_present("h") {
-        help(program.as_slice(), opts);
+        help(program, opts);
         return;
     }
 
     // version
     if matches.opt_present("v") {
-        version(program.as_slice());
+        version(program);
         return;
     }
 
@@ -76,7 +78,6 @@ fn main() {
         match target {
             "c"    |
             "ir"   |
-            "java" |
             "rust" => { emit_targets.push(target); },
             _      => {}, // ignore invalid targets
         }
@@ -84,7 +85,7 @@ fn main() {
 
     // opt-level
     let opt_level = match matches.opt_str("O") {
-        Some(level) => match level.as_slice() {
+        Some(level) => match &level[] {
             "0" => OptLevel::No,
             "1" => OptLevel::Less,
             "3" => OptLevel::Aggressive,
@@ -95,9 +96,9 @@ fn main() {
 
     // file name
     let file_name = if !matches.free.is_empty() {
-        matches.free[0].clone()
+        &(matches.free[0])[]
     } else {
-        help(program.as_slice(), opts);
+        help(&program[], opts);
         return;
     };
 
@@ -116,10 +117,9 @@ fn main() {
     } else {
         for target in emit_targets.iter() {
             match *target {
-                "c"    => emit_c("emit.c", &ast),
-                "ir"   => emit_ir("emit.ir", &ast),
-                "java" => println!("emit java"),
-                "rust" => println!("emit rust"),
+                "c"    => emit_c(&file_name[], &ast),
+                "ir"   => emit_ir(&file_name[], &ast),
+                "rust" => emit_rust(&file_name[], &ast),
                 _ => panic!("error: unknown emit type!"),
             }
         }
