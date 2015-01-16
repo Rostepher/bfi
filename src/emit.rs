@@ -23,32 +23,26 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
     // write each ir as a line
     for ir in ast.iter() {
         let ir_str = match *ir {
-            Ir::Add(value)         => format!("mem[p] += {};", value),
-            Ir::Sub(value)         => format!("mem[p] -= {};", value),
-            Ir::Move(Left, steps)  => format!("p -= {};", steps),
-            Ir::Move(Right, steps) => format!("p += {};", steps),
-            Ir::Read               => "mem[p] = getchar();".to_string(),
-            Ir::Write              => "putchar(mem[p]);".to_string(),
-            Ir::Open               => "while (mem[p] != 0) {".to_string(),
-            Ir::Close              => "}".to_string(),
+            Ir::Add(value)          => format!("mem[p] += {};", value),
+            Ir::Sub(value)          => format!("mem[p] -= {};", value),
+            Ir::Shift(Left, steps)  => format!("p -= {};", steps),
+            Ir::Shift(Right, steps) => format!("p += {};", steps),
+            Ir::Read                => "mem[p] = getchar();".to_string(),
+            Ir::Write               => "putchar(mem[p]);".to_string(),
+            Ir::Open                => "while (mem[p] != 0) {".to_string(),
+            Ir::Close               => "}".to_string(),
 
             // optimizations
-            Ir::Clear              => "mem[p] = 0;".to_string(),
-            Ir::Scan(Left)         => "while (mem[p] != 0) { p -= 1; }".to_string(),
-            Ir::Scan(Right)        => "while (mem[p] != 0) { p += 1; }".to_string(),
-            Ir::Copy(Left, steps)  => format!("mem[p - {}] = mem[p];", steps),
-            Ir::Copy(Right, steps) => format!("mem[p + {}] = mem[p];", steps),
+            Ir::Clear               => "mem[p] = 0;".to_string(),
+            Ir::Scan(Left)          => "while (mem[p] != 0) { p -= 1; }".to_string(),
+            Ir::Scan(Right)         => "while (mem[p] != 0) { p += 1; }".to_string(),
+            Ir::Copy(Left, steps)   => format!("mem[p - {}] = mem[p];", steps),
+            Ir::Copy(Right, steps)  => format!("mem[p + {}] = mem[p];", steps),
             Ir::Mul(Left, steps, factor) => {
                 format!("mem[p - {}] = mem[p] * {};", steps, factor)
             },
             Ir::Mul(Right, steps, factor) => {
                 format!("mem[p + {}] = mem[p] * {};", steps, factor)
-            },
-            Ir::Div(Left, steps, factor) => {
-                format!("mem[p - {}] = mem[p] / {};", steps, factor)
-            },
-            Ir::Div(Right, steps, factor) => {
-                format!("mem[p + {}] = mem[p] / {};", steps, factor)
             },
         } + "\n";
 

@@ -12,8 +12,8 @@ pub fn parse<R: Reader>(byte_stream: &mut ByteStream<R>) -> Ast {
             Some(byte) => match byte as char {
                 '+' => ast.push(Ir::Add(1u8)),
                 '-' => ast.push(Ir::Sub(1u8)),
-                '<' => ast.push(Ir::Move(Left, 1us)),
-                '>' => ast.push(Ir::Move(Right, 1us)),
+                '<' => ast.push(Ir::Shift(Left, 1us)),
+                '>' => ast.push(Ir::Shift(Right, 1us)),
                 ',' => ast.push(Ir::Read),
                 '.' => ast.push(Ir::Write),
                 '[' => {

@@ -1,7 +1,7 @@
 use std::io::{stdin, stdout};
 
 use mem::Mem;
-use syntax::{Ast, Ir, Left, Right};
+use syntax::{Ast, Ir};
 
 /// Reads a `char` from `stdin`.
 fn read_char() -> char {
@@ -31,8 +31,7 @@ pub fn eval(ast: &Ast) {
         match ast[i] {
             Ir::Add(value)         => mem.add(value),
             Ir::Sub(value)         => mem.subtract(value),
-            Ir::Move(Left, steps)  => mem.move_left(steps),
-            Ir::Move(Right, steps) => mem.move_right(steps),
+            Ir::Shift(dir, steps)  => mem.shift(dir, steps),
             Ir::Read               => mem.set(read_char() as u8),
             Ir::Write              => write_char(mem.get() as char),
 
@@ -72,15 +71,10 @@ pub fn eval(ast: &Ast) {
             },
 
             // optimizations
-            Ir::Clear                     => mem.clear(),
-            Ir::Scan(Left)                => mem.scan_left(),
-            Ir::Scan(Right)               => mem.scan_right(),
-            Ir::Copy(Left, steps)         => mem.copy_left(steps),
-            Ir::Copy(Right, steps)        => mem.copy_right(steps),
-            Ir::Mul(Left, steps, factor)  => mem.multiply_left(steps, factor),
-            Ir::Mul(Right, steps, factor) => mem.multiply_right(steps, factor),
-            Ir::Div(Left, steps, factor)  => mem.divide_left(steps, factor),
-            Ir::Div(Right, steps, factor) => mem.divide_right(steps, factor),
+            Ir::Clear                   => mem.clear(),
+            Ir::Scan(dir)               => mem.scan(dir),
+            Ir::Copy(dir, steps)        => mem.copy(dir, steps),
+            Ir::Mul(dir, steps, factor) => mem.multiply(dir, steps, factor),
         }
 
         i += 1; // increment the index
