@@ -60,21 +60,6 @@ impl Mem {
         self.cells[self.ptr] = 0;
     }
 
-    /// Copys the value of the current cell into the cell at `ptr + offset`.
-    #[inline]
-    pub fn copy(&mut self, steps: isize) {
-        let index = ((self.ptr as isize) + steps) as usize;
-        self.cells[index] = self.cells[self.ptr];
-    }
-
-    /// Multiplys the value of the current cell by `` and inserts the value
-    /// into the cell at `ptr + offset`.
-    #[inline]
-    pub fn multiply(&mut self, steps: isize, factor: u8) {
-        let index = ((self.ptr as isize) + steps) as usize;
-        self.cells[index] = self.cells[self.ptr] * factor;
-    }
-
     /// Scans left for a zero cell. This fuction will panic! if there is no
     /// zero cell before it scans past the beginning of the address space.
     #[inline]
@@ -91,5 +76,33 @@ impl Mem {
         while self.cells[self.ptr] != 0 {
             self.move_right(1);
         }
+    }
+
+    /// Copys the value of the current cell into the cell left a number of
+    /// steps.
+    #[inline]
+    pub fn copy_left(&mut self, steps: usize) {
+        self.cells[self.ptr - steps] = self.cells[self.ptr];
+    }
+
+    /// Copys the value of the current cell into the cell right a number of
+    /// steps.
+    #[inline]
+    pub fn copy_right(&mut self, steps: usize) {
+        self.cells[self.ptr + steps] = self.cells[self.ptr];
+    }
+
+    /// Multiplys the value of the current cell by a factor and inserts the
+    /// product into the cell left a number of steps.
+    #[inline]
+    pub fn multiply_left(&mut self, steps: usize, factor: u8) {
+        self.cells[self.ptr - steps] = self.cells[self.ptr] * factor;
+    }
+
+    /// Multiplys the value of the current cell by a factor and inserts the
+    /// product into the cell right a number of steps.
+    #[inline]
+    pub fn multiply_right(&mut self, steps: usize, factor: u8) {
+        self.cells[self.ptr + steps] = self.cells[self.ptr] * factor;
     }
 }

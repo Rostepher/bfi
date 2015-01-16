@@ -1,7 +1,7 @@
 use std::io::{stdin, stdout};
 
 use mem::Mem;
-use syntax::{Ast, Ir};
+use syntax::{Ast, Ir, Left, Right};
 
 /// Reads a `char` from `stdin`.
 fn read_char() -> char {
@@ -29,12 +29,12 @@ pub fn eval(ast: &Ast) {
     let mut i = 0us;
     while i < ast.len() {
         match ast[i] {
-            Ir::Add(value)       => mem.add(value),
-            Ir::Sub(value)       => mem.subtract(value),
-            Ir::MoveLeft(steps)  => mem.move_left(steps),
-            Ir::MoveRight(steps) => mem.move_right(steps),
-            Ir::Read             => mem.set(read_char() as u8),
-            Ir::Write            => write_char(mem.get() as char),
+            Ir::Add(value)         => mem.add(value),
+            Ir::Sub(value)         => mem.subtract(value),
+            Ir::Move(Left, steps)  => mem.move_left(steps),
+            Ir::Move(Right, steps) => mem.move_right(steps),
+            Ir::Read               => mem.set(read_char() as u8),
+            Ir::Write              => write_char(mem.get() as char),
 
             // loops
             Ir::Open => {
@@ -72,11 +72,13 @@ pub fn eval(ast: &Ast) {
             },
 
             // optimizations
-            Ir::Clear              => mem.clear(),
-            Ir::Copy(steps)        => mem.copy(steps),
-            Ir::Mul(steps, factor) => mem.multiply(steps, factor),
-            Ir::ScanLeft           => mem.scan_left(),
-            Ir::ScanRight          => mem.scan_right(),
+            Ir::Clear                     => mem.clear(),
+            Ir::Scan(Left)                => mem.scan_left(),
+            Ir::Scan(Right)               => mem.scan_right(),
+            Ir::Copy(Left, steps)         => mem.copy_left(steps),
+            Ir::Copy(Right, steps)        => mem.copy_right(steps),
+            Ir::Mul(Left, steps, factor)  => mem.multiply_left(steps, factor),
+            Ir::Mul(Right, steps, factor) => mem.multiply_right(steps, factor),
         }
 
         i += 1; // increment the index

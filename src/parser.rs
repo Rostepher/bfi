@@ -1,5 +1,5 @@
 use byte_stream::ByteStream;
-use syntax::{Ast, Ir};
+use syntax::{Ast, Ir, Left, Right};
 
 /// Parses a `TokenStream` and returns a vaid `Ast`, panics if there is a
 /// syntax error.
@@ -12,8 +12,8 @@ pub fn parse<R: Reader>(byte_stream: &mut ByteStream<R>) -> Ast {
             Some(byte) => match byte as char {
                 '+' => ast.push(Ir::Add(1u8)),
                 '-' => ast.push(Ir::Sub(1u8)),
-                '<' => ast.push(Ir::MoveLeft(1us)),
-                '>' => ast.push(Ir::MoveRight(1us)),
+                '<' => ast.push(Ir::Move(Left, 1us)),
+                '>' => ast.push(Ir::Move(Right, 1us)),
                 ',' => ast.push(Ir::Read),
                 '.' => ast.push(Ir::Write),
                 '[' => {

@@ -3,43 +3,10 @@
 ///! written by Mats Linander. It implements many of the optimization
 ///! strategies discussed in the article.
 
-use std::default::Default;
+use std::collections::HashMap;
+use std::io::stdin;
 
-use syntax::{Ast, Ir};
-
-/// The Optimization Configuration or `OptConfig` struct holds settings for which
-/// optimization techniques to use.
-#[derive(Clone, Copy, Show)]
-pub struct OptConfig {
-    contract_opt: bool,
-    clear_loop_opt: bool,
-    scan_loop_opt: bool,
-    mul_copy_loop_opt: bool,
-}
-
-impl OptConfig {
-    #[inline]
-    pub fn new(use_contract_opt: bool,
-               use_clear_loop_opt: bool,
-               use_scan_loop_opt: bool,
-               use_mul_copy_loop_opt: bool) -> OptConfig {
-        OptConfig {
-            contract_opt: use_contract_opt,
-            clear_loop_opt: use_clear_loop_opt,
-            scan_loop_opt: use_scan_loop_opt,
-            mul_copy_loop_opt: use_mul_copy_loop_opt,
-        }
-    }
-}
-
-impl Default for OptConfig {
-    fn default() -> OptConfig {
-        OptConfig::new(true,    // contract opt
-                       true,    // clear loop opt
-                       true,    // scan loop opt
-                       true)    // mul/copy loop opt
-    }
-}
+use syntax::{Ast, Ir, Right, Left};
 
 /// Removes comment loop(s), which exist at the very beginning of the `Ast` and
 /// would never execute as the current cell would be 0.
@@ -132,7 +99,7 @@ fn contract_opt(ast: &Ast) -> Ast {
         opt_ast.push(ast[0]);
 
         // combine ir of the same type
-        for i in range(1, ast.len()) {
+        for i in 1..ast.len() {
             let prev = opt_ast.pop().unwrap();
             match (prev, ast[i]) {
                 (Ir::Add(prev_value), Ir::Add(value)) => {
@@ -141,11 +108,11 @@ fn contract_opt(ast: &Ast) -> Ast {
                 (Ir::Sub(prev_value), Ir::Sub(value)) => {
                     opt_ast.push(Ir::Sub(prev_value + value));
                 },
-                (Ir::MoveLeft(prev_steps), Ir::MoveLeft(steps)) => {
-                    opt_ast.push(Ir::MoveLeft(prev_steps + steps));
+                (Ir::Move(Left, prev_steps), Ir::Move(Left, steps)) => {
+                    opt_ast.push(Ir::Move(Left, prev_steps + steps));
                 },
-                (Ir::MoveRight(prev_steps), Ir::MoveRight(steps)) => {
-                    opt_ast.push(Ir::MoveRight(prev_steps + steps));
+                (Ir::Move(Right, prev_steps), Ir::Move(Right, steps)) => {
+                    opt_ast.push(Ir::Move(Right, prev_steps + steps));
                 },
                 _ => {
                     opt_ast.push(prev);
@@ -161,7 +128,7 @@ fn contract_opt(ast: &Ast) -> Ast {
         // combine ir of opposite types, i.e. Ir::Add and Ir::Sub or
         // Ir::MoveLeft and Ir::MoveRight, if they appear directly after each
         // other.
-        for i in range(1, prev_opt_ast.len()) {
+        for i in 1..prev_opt_ast.len() {
             let prev = opt_ast.pop().unwrap();
             match (prev, prev_opt_ast[i]) {
                 (Ir::Add(prev_value), Ir::Sub(value)) => {
@@ -178,18 +145,18 @@ fn contract_opt(ast: &Ast) -> Ast {
                         opt_ast.push(Ir::Add(value - prev_value));
                     } else {} // they cancel out
                 },
-                (Ir::MoveLeft(prev_steps), Ir::MoveRight(steps)) => {
+                (Ir::Move(Left, prev_steps), Ir::Move(Right, steps)) => {
                     if prev_steps > steps {
-                        opt_ast.push(Ir::MoveLeft(prev_steps - steps));
+                        opt_ast.push(Ir::Move(Left, prev_steps - steps));
                     } else if prev_steps < steps {
-                        opt_ast.push(Ir::MoveRight(steps - prev_steps));
+                        opt_ast.push(Ir::Move(Right, steps - prev_steps));
                     } else {} // they cancel out
                 },
-                (Ir::MoveRight(prev_steps), Ir::MoveLeft(steps)) => {
+                (Ir::Move(Right, prev_steps), Ir::Move(Left, steps)) => {
                     if prev_steps > steps {
-                        opt_ast.push(Ir::MoveRight(prev_steps - steps));
+                        opt_ast.push(Ir::Move(Right, prev_steps - steps));
                     } else if prev_steps < steps {
-                        opt_ast.push(Ir::MoveLeft(steps - prev_steps));
+                        opt_ast.push(Ir::Move(Left, steps - prev_steps));
                     } else {} // they cancel out
                 },
                 _ => {
@@ -227,7 +194,7 @@ fn clear_loop_opt(ast: &Ast) -> Ast {
         opt_ast.push(ast[0]);
         opt_ast.push(ast[1]);
 
-        for i in range(2, ast.len()) {
+        for i in 2..ast.len() {
             let prev = (ast[i - 2], ast[i - 1], ast[i]);
             match prev {
                 (Ir::Open, Ir::Add(1), Ir::Close) |
@@ -268,18 +235,13 @@ fn scan_loop_opt(ast: &Ast) -> Ast {
         opt_ast.push(ast[0]);
         opt_ast.push(ast[1]);
 
-        for i in range(2, ast.len()) {
+        for i in 2..ast.len() {
             let prev = (ast[i - 2], ast[i - 1], ast[i]);
             match prev {
-                (Ir::Open, Ir::MoveLeft(1), Ir::Close)  => {
+                (Ir::Open, Ir::Move(dir, 1), Ir::Close)  => {
                     opt_ast.pop();
                     opt_ast.pop();
-                    opt_ast.push(Ir::ScanLeft);
-                },
-                (Ir::Open, Ir::MoveRight(1), Ir::Close) => {
-                    opt_ast.pop();
-                    opt_ast.pop();
-                    opt_ast.push(Ir::ScanRight);
+                    opt_ast.push(Ir::Scan(dir));
                 },
                 _ => { opt_ast.push(ast[i]); },
             }
@@ -322,26 +284,32 @@ fn mul_copy_loop_opt(ast: &Ast) -> Ast {
     ast.clone()
 }
 
-/// Optimizes an `Ast` using the `OptConfig` to customize which optimizations
+/// Optimization level selected by the user in the command line.
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Show)]
+pub enum OptLevel {
+    No,         // -O0
+    Less,       // -O1
+    Default,    // -O2
+    Aggressive, // -O3
+}
+
+/// Optimizes an `Ast` using the `OptLevel` to customize which optimizations
 /// to execute.
-pub fn optimize(opt_config: &OptConfig, ast: &Ast) -> Ast {
+pub fn optimize(opt_level: OptLevel, ast: &Ast) -> Ast {
     let mut opt_ast = ast.clone();
 
-    // always optimize out comment loops and unused loops
-    opt_ast = comment_loop_opt(&opt_ast);
-    opt_ast = unused_loop_opt(&opt_ast);
+    if opt_level >= OptLevel::Less {
+        opt_ast = comment_loop_opt(&opt_ast);
+        opt_ast = unused_loop_opt(&opt_ast);
+    }
 
-    // optimize according to the opt_config
-    if opt_config.contract_opt {
+    if opt_level >= OptLevel::Default {
         opt_ast = contract_opt(&opt_ast);
-    }
-    if opt_config.clear_loop_opt {
         opt_ast = clear_loop_opt(&opt_ast);
-    }
-    if opt_config.scan_loop_opt {
         opt_ast = scan_loop_opt(&opt_ast);
     }
-    if opt_config.mul_copy_loop_opt {
+
+    if opt_level == OptLevel::Aggressive {
         opt_ast = mul_copy_loop_opt(&opt_ast);
     }
 

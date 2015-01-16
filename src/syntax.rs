@@ -1,3 +1,13 @@
+// re-export Left and Right
+pub use self::Dir::{Left, Right};
+
+/// Directions Left or Right.
+#[derive(Clone, Copy, Eq, PartialEq, Show)]
+pub enum Dir {
+    Left,
+    Right,
+}
+
 /// Intermediate Representation of Brainfuck operations.
 #[derive(Clone, Copy, Eq, PartialEq, Show)]
 pub enum Ir {
@@ -5,10 +15,8 @@ pub enum Ir {
     Add(u8),
     /// Subtracts the value from the current cell.
     Sub(u8),
-    /// Moves the pointer in memory left by a number of steps.
-    MoveLeft(usize),
-    /// Moves the pointer in memory right by a number of steps.
-    MoveRight(usize),
+    /// Moves the pointer in memory left or right by a number of steps.
+    Move(Dir, usize),
     /// Reads and stores a single byte into the current cell.
     Read,
     /// Writes the byte at the current cell to `stdout` as a `char`.
@@ -22,16 +30,14 @@ pub enum Ir {
 
     /// Clears the current cell.
     Clear,
-    /// Copies the value at the current cell to the cell at pointer + a number
-    /// of steps.
-    Copy(isize),
+    /// Copies the value at the current cell to the cell left or right by a
+    /// number of steps.
+    Copy(Dir, usize),
     /// Multiplies the value at the current cell by a specified factor and
-    /// then stores the product in the cell at pointer + a number of steps.
-    Mul(isize, u8),
-    /// Scans left in memory until the value in the cell at pointer is 0.
-    ScanLeft,
-    /// Scans right in memory until the value in the cell at pointer is 0.
-    ScanRight,
+    /// then stores the product in the cell left or right by a number of steps.
+    Mul(Dir, usize, u8),
+    /// Scans left or right in memory until the value in the current cell is 0.
+    Scan(Dir),
 }
 
 /// Abstract Syntax Tree or `Ast`.
