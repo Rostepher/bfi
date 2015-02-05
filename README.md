@@ -1,9 +1,8 @@
-# brainfuck
+# `brainfuck`
 
-An optimized [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck) interpreter
-written in [Rust](https://rust-lang.org) capable of also emitting the internal
-Intermediate Representation (IR) of the Abstract Syntax Tree (AST) and
-transpiling brainfuck programs into optimized C and Rust.
+An interpreter for the esoteric language [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck)
+written in [Rust](https://rust-lang.org) that utilizes a handful of optimization
+strategies to drastically improve runtime of executed programs.
 
 ## Optimizations
 
@@ -22,5 +21,5 @@ written by Matz Linander.
 ## Example Programs
 
 There is a collection of example brainfuck programs in the examples directory.
-I claim no ownership of the programs in the examples directory. I will gladly
+I claim no ownership of the programs in the `examples` directory. I will gladly
 remove any program on request of the author or possible copyright holder.
