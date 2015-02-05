@@ -1,4 +1,4 @@
-# `brainfuck`
+# brainfuck
 
 An interpreter for the esoteric language [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck)
 written in [Rust](https://rust-lang.org) that utilizes a handful of optimization
