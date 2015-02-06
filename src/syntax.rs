@@ -2,14 +2,14 @@
 pub use self::Dir::{Left, Right};
 
 /// Directions Left or Right.
-#[derive(Clone, Copy, Eq, PartialEq, Show)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Dir {
     Left,
     Right,
 }
 
 /// Intermediate Representation of Brainfuck operations.
-#[derive(Clone, Copy, Eq, PartialEq, Show)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Ir {
     /// Adds the value to the current cell.
     Add(u8),

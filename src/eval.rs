@@ -1,4 +1,4 @@
-use std::io::{stdin, stdout};
+use std::old_io::{stdin, stdout};
 
 use mem::Mem;
 use syntax::{Ast, Ir};

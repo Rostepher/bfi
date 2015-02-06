@@ -1,4 +1,4 @@
-use std::io::File;
+use std::old_io::File;
 
 use syntax::{Ast, Ir, Left, Right};
 

@@ -8,7 +8,7 @@ pub fn parse<R: Reader>(byte_stream: &mut ByteStream<R>) -> Ast {
     let mut open_count = 0u32;
     let mut close_count = 0u32;
     loop {
-        match byte_stream.next_byte() {
+        match byte_stream.next() {
             Some(byte) => match byte as char {
                 '+' => ast.push(Ir::Add(1u8)),
                 '-' => ast.push(Ir::Sub(1u8)),

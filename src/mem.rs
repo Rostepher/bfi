@@ -7,7 +7,7 @@ const MEM_SIZE: usize = 65_536; // 64kB!
 
 pub struct Mem {
     cells: Box<[u8]>,   // address space
-    ptr: usize           // pointer in address space
+    ptr: usize          // pointer in address space
 }
 
 impl Mem {
@@ -108,9 +108,9 @@ impl Mem {
             self.cells[index] += self.cells[self.ptr] * u8_factor;
         }
 
-        // when factor is <= 2 it subtracts the product of the current cell and the
+        // when factor is <= -2 it subtracts the product of the current cell and the
         // absolute value of factor to the cell at index
-        else if factor <= 2 {
+        else if factor <= -2 {
             self.cells[index] -= self.cells[self.ptr] * u8_factor;
         }
 

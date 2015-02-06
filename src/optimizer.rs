@@ -363,7 +363,7 @@ fn replace_mul_copy_loop(loop_ast: &Ast) -> Option<Ast> {
 
         // factor is 0, so it does nothing
         else {
-            panic!("error: factor of 0 found!");
+            continue;
         }
     }
 
@@ -439,6 +439,9 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
             // the loop was replacable so append the new ir to opt_ast
             Some(opt_loop_ast) => {
                 opt_ast.push_all(&opt_loop_ast[]);
+                println!("loop_ast     = {:?}", loop_ast);
+                println!("opt_loop_ast = {:?}", opt_loop_ast);
+                println!("");
             },
 
             // the loop was not a copy, mul or div loop, therefore push all
@@ -456,7 +459,7 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
 }
 
 /// Optimization level selected by the user in the command line.
-#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Show)]
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug)]
 pub enum OptLevel {
     No,         // -O0
     Less,       // -O1

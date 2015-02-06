@@ -7,7 +7,7 @@ extern crate getopts;
 
 use getopts::*;
 
-use std::io::File;
+use std::old_io::File;
 
 use byte_stream::ByteStream;
 use emit::{emit_c, emit_ir, emit_rust};
@@ -105,7 +105,7 @@ fn main() {
     // parse file and produce ast
     let ast = match File::open(&Path::new(file_name)) {
         Ok(mut file) => {
-            let mut byte_stream = ByteStream::new(&mut file);
+            let mut byte_stream = ByteStream::new(file);
             optimize(opt_level, &parse(&mut byte_stream))
         },
         Err(e) => panic!("{}", e),
