@@ -1,11 +1,13 @@
 // Brainfuck interpreter written in Rust.
 
 #![feature(box_syntax)]
+#![feature(int_uint)]
+
 #![allow(unstable)] // TODO: remove once std::io/os reform lands
 
 extern crate getopts;
 
-use getopts::*;
+use getopts::Options;
 
 use std::old_io::File;
 
@@ -26,9 +28,9 @@ mod syntax;
 static VERSION: &'static str = "0.1.0";
 
 /// Prints the help message to stdout.
-fn help(program: &str, opts: &[OptGroup]) {
+fn help(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options] FILE", program);
-    println!("{}", usage(&brief[], opts));
+    println!("{}", opts.usage(&brief));
 }
 
 /// Prints the version information to stdout.
@@ -39,19 +41,18 @@ fn version(program: &str) {
 /// Main function.
 fn main() {
     let args = std::os::args();
-    let program = &(args[0])[];
+    let program = &args[0].clone();
 
     // command line options
-    let opts = &[
-        optflag("h", "help", "Print this help message"),
-        optflag("v", "version", "Output version information and exit"),
-        optopt("", "emit", "Comma separated list of types of output for the \
-                           interpreter to emit.", "[c|ir|rust]"),
-        optopt("O", "opt-level", "Optimize with possible levels 0-3, default \
-                                 2", "LEVEL"),
-    ];
+    let mut opts = Options::new();
+    opts.optflag("h", "help", "Print this help message");
+    opts.optflag("v", "version", "Output version information and exit");
+    opts.optopt("", "emit", "Comma separated list of types of output for the \
+                             interpreter to emit.", "[c|ir|rust]");
+    opts.optopt("O", "opt-level", "Optimize with possible levels 0-3, default \
+                                 2", "LEVEL");
 
-    let matches = match getopts(args.tail(), opts) {
+    let matches = match opts.parse(args.tail()) {
         Ok(m)  => m,
         Err(e) => panic!("{}", e),
     };
@@ -85,7 +86,7 @@ fn main() {
 
     // opt-level
     let opt_level = match matches.opt_str("O") {
-        Some(level) => match &level[] {
+        Some(level) => match level.clone() {
             "0" => OptLevel::No,
             "1" => OptLevel::Less,
             "3" => OptLevel::Aggressive,
@@ -96,9 +97,9 @@ fn main() {
 
     // file name
     let file_name = if !matches.free.is_empty() {
-        &(matches.free[0])[]
+        matches.free[0].clone()
     } else {
-        help(&program[], opts);
+        help(&program, opts);
         return;
     };
 
@@ -117,9 +118,9 @@ fn main() {
     } else {
         for target in emit_targets.iter() {
             match *target {
-                "c"    => emit_c(&file_name[], &ast),
-                "ir"   => emit_ir(&file_name[], &ast),
-                "rust" => emit_rust(&file_name[], &ast),
+                "c"    => emit_c(&file_name[..], &ast),
+                "ir"   => emit_ir(&file_name[..], &ast),
+                "rust" => emit_rust(&file_name[..], &ast),
                 _ => panic!("error: unknown emit type!"),
             }
         }

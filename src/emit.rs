@@ -4,7 +4,7 @@ use syntax::{Ast, Ir, Left, Right};
 
 /// Emits a C file with `file_name` created from `ast`.
 pub fn emit_c(file_name: &str, ast: &Ast) {
-    let c_file_name = &(file_name.to_string() + ".c")[];
+    let c_file_name = &(file_name.to_string() + ".c")[..];
     let mut file = match File::create(&Path::new(c_file_name)) {
         Ok(file) => file,
         Err(e)       => panic!("{}", e),
@@ -56,20 +56,20 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
 
 /// Emits a file which contains the optmized `Ast`.
 pub fn emit_ir(file_name: &str, ast: &Ast) {
-    let ir_file_name = &(file_name.to_string() + ".ir")[];
+    let ir_file_name = &(file_name.to_string() + ".ir")[..];
     let mut file = match File::create(&Path::new(ir_file_name)) {
         Ok(file) => file,
         Err(e)       => panic!("{}", e),
     };
 
     for ir in ast.iter() {
-        file.write_line(&format!("{:?}", *ir)[]);
+        file.write_line(&format!("{:?}", *ir)[..]);
     }
 }
 
 /// Emits a Rust file with `file_name` created from `ast`.
 pub fn emit_rust(file_name: &str, ast: &Ast) {
-    let rs_file_name = &(file_name.to_string() + ".rs")[];
+    let rs_file_name = &(file_name.to_string() + ".rs")[..];
     let mut file = match File::create(&Path::new(rs_file_name)) {
         Ok(file) => file,
         Err(e)       => panic!("{}", e),

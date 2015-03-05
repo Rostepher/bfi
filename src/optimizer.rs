@@ -438,7 +438,7 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
         match replace_mul_copy_loop(&loop_ast) {
             // the loop was replacable so append the new ir to opt_ast
             Some(opt_loop_ast) => {
-                opt_ast.push_all(&opt_loop_ast[]);
+                opt_ast.push_all(&opt_loop_ast[..]);
                 println!("loop_ast     = {:?}", loop_ast);
                 println!("opt_loop_ast = {:?}", opt_loop_ast);
                 println!("");
@@ -447,7 +447,7 @@ fn copy_mul_div_loop_opt(ast: &Ast) -> Ast {
             // the loop was not a copy, mul or div loop, therefore push all
             // ir from loop_ast
             None => {
-                opt_ast.push_all(&loop_ast[]);
+                opt_ast.push_all(&loop_ast[..]);
             },
         }
 
