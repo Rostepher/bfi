@@ -1,9 +1,13 @@
 // Brainfuck interpreter written in Rust.
 
+// TODO: remove once 1.0-final lands
 #![feature(box_syntax)]
+#![feature(collections)]
+#![feature(core)]
 #![feature(int_uint)]
-
-#![allow(unstable)] // TODO: remove once std::io/os reform lands
+#![feature(old_io)]
+#![feature(old_path)]
+#![feature(os)]
 
 extern crate getopts;
 
@@ -75,7 +79,7 @@ fn main() {
         None    => String::new(),
     };
     let mut emit_targets = Vec::new();
-    for target in emit_str.split_str(",") {
+    for target in emit_str.split(",") {
         match target {
             "c"    |
             "ir"   |
@@ -86,7 +90,7 @@ fn main() {
 
     // opt-level
     let opt_level = match matches.opt_str("O") {
-        Some(level) => match level.clone() {
+        Some(level) => match &level[..] {
             "0" => OptLevel::No,
             "1" => OptLevel::Less,
             "3" => OptLevel::Aggressive,
@@ -104,8 +108,8 @@ fn main() {
     };
 
     // parse file and produce ast
-    let ast = match File::open(&Path::new(file_name)) {
-        Ok(mut file) => {
+    let ast = match File::open(&Path::new(&file_name)) {
+        Ok(file) => {
             let mut byte_stream = ByteStream::new(file);
             optimize(opt_level, &parse(&mut byte_stream))
         },

@@ -1,5 +1,3 @@
-#![allow(unstable)]
-
 use std::old_io::{BufferedReader, IoError, IoErrorKind};
 
 pub struct ByteStream<R: Reader> {

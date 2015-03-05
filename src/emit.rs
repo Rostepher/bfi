@@ -1,6 +1,28 @@
-use std::old_io::File;
+use std::old_io::{File, IoResult};
 
 use syntax::{Ast, Ir, Left, Right};
+
+/// Helper function to check that an IoResult is not Err.
+fn check_io_result(io_result: &IoResult<()>) {
+    match *io_result {
+        Ok(_)      => {},
+        Err(ref e) => panic!("{}", e),
+    }
+}
+
+/// Emits a file which contains the optmized `Ast`.
+pub fn emit_ir(file_name: &str, ast: &Ast) {
+    let ir_file_name = &(file_name.to_string() + ".ir")[..];
+    let mut file = match File::create(&Path::new(ir_file_name)) {
+        Ok(file) => file,
+        Err(e)       => panic!("{}", e),
+    };
+
+    for ir in ast.iter() {
+        let io_result = file.write_line(&format!("{:?}", *ir)[..]);
+        check_io_result(&io_result);
+    }
+}
 
 /// Emits a C file with `file_name` created from `ast`.
 pub fn emit_c(file_name: &str, ast: &Ast) {
@@ -10,8 +32,11 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
         Err(e)       => panic!("{}", e),
     };
 
+    // save the result values from each write
+    let mut io_result;
+
     // standard includes, main function and mem/p declarations
-    file.write_str("\
+    io_result = file.write_str("\
     #include <stdio.h>\n\
     #include <stdint.h>\n\
     #include <stdlib.h>\n\
@@ -20,6 +45,7 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
     uint8_t mem[65536] = {0};\n\
     uint32_t p = 0;\n\
     ");
+    check_io_result(&io_result);
 
     // write each ir as a line
     for ir in ast.iter() {
@@ -47,24 +73,13 @@ pub fn emit_c(file_name: &str, ast: &Ast) {
             },
         } + "\n";
 
-        file.write(ir_str.as_bytes());
+        io_result = file.write_all(ir_str.as_bytes());
+        check_io_result(&io_result);
     }
 
     // close the main function
-    file.write_str("}");
-}
-
-/// Emits a file which contains the optmized `Ast`.
-pub fn emit_ir(file_name: &str, ast: &Ast) {
-    let ir_file_name = &(file_name.to_string() + ".ir")[..];
-    let mut file = match File::create(&Path::new(ir_file_name)) {
-        Ok(file) => file,
-        Err(e)       => panic!("{}", e),
-    };
-
-    for ir in ast.iter() {
-        file.write_line(&format!("{:?}", *ir)[..]);
-    }
+    io_result = file.write_str("}");
+    check_io_result(&io_result);
 }
 
 /// Emits a Rust file with `file_name` created from `ast`.
@@ -75,8 +90,11 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
         Err(e)       => panic!("{}", e),
     };
 
+    // save the result values from each write
+    let mut io_result;
+
     // standard includes, main function and mem/p declarations
-    file.write_str("\
+    io_result = file.write_str("\
     #![allow(unstable)]\n\
     \n\
     /// Reads a `char` from `stdin`.\n\
@@ -100,6 +118,7 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
     let mut p = 0us;\n\
     \n\
     ");
+    check_io_result(&io_result);
 
     // write each ir as a line
     for ir in ast.iter() {
@@ -127,9 +146,11 @@ pub fn emit_rust(file_name: &str, ast: &Ast) {
             },
         } + "\n";
 
-        file.write(ir_str.as_bytes());
+        io_result = file.write_all(ir_str.as_bytes());
+        check_io_result(&io_result);
     }
 
     // close the main function
-    file.write_str("}");
+    io_result = file.write_str("}");
+    check_io_result(&io_result);
 }
